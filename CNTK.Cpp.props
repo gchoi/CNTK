@@ -58,7 +58,6 @@
 
   <PropertyGroup Condition="!$(IsUWP)">
     <WindowsTargetPlatformVersion>$(WindowsSDKVersion.TrimEnd('\'))</WindowsTargetPlatformVersion>
-    
     <MathLibrary>MKL</MathLibrary>
     <MathIncludePath>$(MKL_PATH)\include</MathIncludePath>
     <MathDefine>USE_MKL</MathDefine>
