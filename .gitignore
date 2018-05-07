@@ -336,3 +336,5 @@ Examples/Text/LightRNN/LightRNN/*.so
 /CNTK.VC.db
 /CNTK.VC.VC.opendb
 /Local
+*.nupkg
+*.config
