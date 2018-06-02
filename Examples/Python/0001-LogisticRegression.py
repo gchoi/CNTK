@@ -1,9 +1,6 @@
 # Import the relevant components
 from __future__ import print_function
 import numpy as np
-import sys
-import os
-
 import cntk as C
 import cntk.tests.test_utils
 
@@ -190,11 +187,10 @@ plt.show()
 test_minibatch_size = 25
 features, labels = generate_random_data_sample(test_minibatch_size, input_dim, num_output_classes)
 
-trainer.test_minibatch({feature : features, label : labels}
-
+trainer.test_minibatch({feature : features, label : labels})
 
 ###############################################################################
-# CHECKING PREDICTIN / EVALUATION
+# CHECKING PREDICTION / EVALUATION
 ###############################################################################
 out = C.softmax(z)
 result = out.eval({feature : features})
@@ -203,9 +199,23 @@ result = out.eval({feature : features})
 print("Label    :", [np.argmax(label) for label in labels])
 print("Predicted:", [np.argmax(x) for x in result])
 
+###############################################################################
+# VISUALIZATION
+###############################################################################
+# Model parameters
+print(mydict['b'].value)
 
+bias_vector   = mydict['b'].value
+weight_matrix = mydict['w'].value
 
+# Plot the data 
+import matplotlib.pyplot as plt
 
-
-
-
+# let 0 represent malignant/red, and 1 represent benign/blue
+colors = ['r' if label == 0 else 'b' for label in labels[:,0]]
+plt.scatter(features[:,0], features[:,1], c=colors)
+plt.plot([0, bias_vector[0]/weight_matrix[0][1]], 
+         [ bias_vector[1]/weight_matrix[0][0], 0], c = 'g', lw = 3)
+plt.xlabel("Patient age (scaled)")
+plt.ylabel("Tumor size (in cm)")
+plt.show()
