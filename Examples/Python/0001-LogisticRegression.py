@@ -28,9 +28,9 @@ def generate_random_data_sample(sample_size, feature_dim, num_classes):
     
     # Specify the data type to match the input variable used later in the tutorial 
     # (default type is double)
-    X = X.astype(np.float32)    
+    X = X.astype(np.float32)
     
-    # convert class 0 into the vector "1 0 0", 
+    # convert class 0 into the vector "1 0 0",
     # class 1 into the vector "0 1 0", ...
     class_ind = [Y==class_number for class_number in range(num_classes)]
     Y = np.asarray(np.hstack(class_ind), dtype=np.float32)
