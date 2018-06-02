@@ -1,17 +1,13 @@
-﻿using System;
+﻿using CNTK;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CNTK.CSTrainingExamples
+namespace CNTK.CntkGpuExample
 {
-    /// <summary>
-    /// This class shows how the train and evaluate a Logistic Regression classifier.
-    /// Data are randomly generated into 2 classes with statistically separable features.
-    /// See https://github.com/Microsoft/CNTK/blob/master/Tutorials/CNTK_101_LogisticRegression.ipynb for more details.
-    /// </summary>
-    public class LogisticRegression
+    class Program
     {
         static int inputDim = 3;
         static int numOutputClasses = 2;
@@ -122,6 +118,13 @@ namespace CNTK.CSTrainingExamples
             var biasParam = new Parameter(new int[] { outputDim }, DataType.Float, 0, device, "b");
 
             return CNTKLib.Times(weightParam, input) + biasParam;
+        }
+
+        static void Main(string[] args)
+        {
+            var device = DeviceDescriptor.GPUDevice(0);
+            Console.WriteLine($"======== running LogisticRegression.TrainAndEvaluate using {device.Type} ========");
+            TrainAndEvaluate(device);
         }
     }
 }

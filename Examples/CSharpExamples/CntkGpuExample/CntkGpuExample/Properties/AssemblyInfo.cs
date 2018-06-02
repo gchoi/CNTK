@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LogisticRegression")]
+[assembly: AssemblyTitle("CntkGpuExample")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LogisticRegression")]
+[assembly: AssemblyProduct("CntkGpuExample")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("2bd27cb8-a000-4319-be62-d21d938b6c1a")]
+[assembly: Guid("4925b0a4-b17a-4e3a-9472-2d462037238e")]
 
 // Version information for an assembly consists of the following four values:
 //
