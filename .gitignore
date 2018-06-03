@@ -343,3 +343,4 @@ packages/
 /Local
 .vs/
 cscope.out
+Examples/Python/data/
