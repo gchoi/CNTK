@@ -4,6 +4,8 @@ import numpy as np
 import cntk as C
 import cntk.tests.test_utils
 
+import helper
+
 cntk.tests.test_utils.set_device_from_pytest_env() # (only needed for our build system)
 C.cntk_py.set_fixed_random_seed(1) # fix the random seed so that LR examples are repeatable
 
@@ -105,30 +107,6 @@ trainer = C.Trainer(z, (loss, eval_error), [learner])
 
 
 ###############################################################################
-# HELPER FUNCTIONS
-###############################################################################
-# Define a utility function to compute the moving average.
-# A more efficient implementation is possible with np.cumsum() function
-def moving_average(a, w=10):
-    if len(a) < w: 
-        return a[:]    
-    return [val if idx < w else sum(a[(idx-w):idx])/w for idx, val in enumerate(a)]
-
-
-# Define a utility that prints the training progress
-def print_training_progress(trainer, mb, frequency, verbose=1):
-    training_loss, eval_error = "NA", "NA"
-
-    if mb % frequency == 0:
-        training_loss = trainer.previous_minibatch_loss_average
-        eval_error = trainer.previous_minibatch_evaluation_average
-        if verbose: 
-            print ("Minibatch: {0}, Loss: {1:.4f}, Error: {2:.2f}".format(mb, training_loss, eval_error))
-        
-    return mb, training_loss, eval_error
-
-
-###############################################################################
 # RUN THE TRAINER
 ###############################################################################
 # Initialize the parameters for the trainer
@@ -147,7 +125,7 @@ for i in range(0, num_minibatches_to_train):
     
     # Assign the minibatch data to the input variables and train the model on the minibatch
     trainer.train_minibatch({feature : features, label : labels})
-    batchsize, loss, error = print_training_progress(trainer, i, 
+    batchsize, loss, error = helper.print_training_progress(trainer, i, 
                                                      training_progress_output_freq, verbose=1)
     
     if not (loss == "NA" or error =="NA"):
@@ -157,8 +135,8 @@ for i in range(0, num_minibatches_to_train):
 
 
 # Compute the moving average loss to smooth out the noise in SGD
-plotdata["avgloss"] = moving_average(plotdata["loss"])
-plotdata["avgerror"] = moving_average(plotdata["error"])
+plotdata["avgloss"] = helper.moving_average(plotdata["loss"])
+plotdata["avgerror"] = helper.moving_average(plotdata["error"])
 
 # Plot the training loss and the training error
 import matplotlib.pyplot as plt

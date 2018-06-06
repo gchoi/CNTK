@@ -5,7 +5,6 @@
 # ==============================================================================
 
 import numpy as np
-from cntk.device import cpu, try_set_default_device
 from cntk import Trainer
 from cntk.layers import Dense, Sequential, For
 from cntk.learners import sgd, learning_parameter_schedule
