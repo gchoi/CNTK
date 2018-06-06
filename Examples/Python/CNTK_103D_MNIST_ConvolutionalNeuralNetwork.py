@@ -1,9 +1,6 @@
 from __future__ import print_function # Use a function definition from future version (say 3.x from 2.7 interpreter)
-import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import sys
 import time
 
 import cntk as C
@@ -14,6 +11,11 @@ import helper
 cntk.tests.test_utils.set_device_from_pytest_env() # (only needed for our build system)
 C.cntk_py.set_fixed_random_seed(1) # fix a random seed for CNTK components
 
+
+###############################################################################
+# LOAD FILES
+###############################################################################
+train_file, test_file = helper.ensure_data_dir()
 
 ###############################################################################
 # DATA READING
@@ -154,15 +156,74 @@ def do_train_test():
     
 do_train_test()
 
-
 print("Bias value of the last dense layer:", z.classify.b.value)
 
 
+###############################################################################
+# RUN EVALUATION/PREDICTION
+###############################################################################
+out = C.softmax(z)
+
+# Read the data for evaluation
+reader_eval = helper.create_reader(test_file, False, input_dim, num_output_classes)
+
+eval_minibatch_size = 25
+eval_input_map = {x: reader_eval.streams.features, y:reader_eval.streams.labels} 
+
+data = reader_eval.next_minibatch(eval_minibatch_size, input_map=eval_input_map)
+
+img_label = data[y].asarray()
+img_data = data[x].asarray()
+
+# reshape img_data to: M x 1 x 28 x 28 to be compatible with model
+img_data = np.reshape(img_data, (eval_minibatch_size, 1, 28, 28))
+
+predicted_label_prob = [out.eval(img_data[i]) for i in range(len(img_data))]
+
+# Find the index with the maximum value for both predicted as well as the ground truth
+pred = [np.argmax(predicted_label_prob[i]) for i in range(len(predicted_label_prob))]
+gtlabel = [np.argmax(img_label[i]) for i in range(len(img_label))]
+
+print("Label    :", gtlabel[:25])
+print("Predicted:", pred)
+
+# Plot a random image
+sample_number = 22
+plt.imshow(img_data[sample_number].reshape(28,28), cmap="gray_r")
+plt.axis('off')
+
+img_gt, img_pred = gtlabel[sample_number], pred[sample_number]
+print("Image Label: ", img_pred)
+
+###############################################################################
+# POOLING LAYER
+###############################################################################
+# function to build model
+def create_model2(features):
+    with C.layers.default_options(init = C.layers.glorot_uniform(), activation = C.relu):
+            h = features
+            
+            h = C.layers.Convolution2D(filter_shape=(5,5), 
+                                       num_filters=8, 
+                                       strides=(1,1), 
+                                       pad=True, name="first_conv")(h)
+            h = C.layers.MaxPooling(filter_shape=(2,2), 
+                                    strides=(2,2), name="first_max")(h)
+            h = C.layers.Convolution2D(filter_shape=(5,5), 
+                                       num_filters=16, 
+                                       strides=(1,1), 
+                                       pad=True, name="second_conv")(h)
+            h = C.layers.MaxPooling(filter_shape=(3,3), 
+                                    strides=(3,3), name="second_max")(h)
+            r = C.layers.Dense(num_output_classes, activation = None, name="classify")(h)
+            return r
 
 
+def do_train_test2():
+    global z
+    z = create_model2(x)
+    reader_train = helper.create_reader(train_file, True, input_dim, num_output_classes)
+    reader_test = helper.create_reader(test_file, False, input_dim, num_output_classes)
+    train_test(reader_train, reader_test, z)
 
-
-
-
-
-
+do_train_test2()

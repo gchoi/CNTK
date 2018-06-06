@@ -66,3 +66,5 @@ def ensure_data_dir():
         raise ValueError("Please generate the data by completing CNTK 103 Part A")
         
     print("Data directory is {0}".format(data_dir))
+    
+    return train_file, test_file
