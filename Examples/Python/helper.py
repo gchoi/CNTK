@@ -3,6 +3,8 @@ import os
 import cntk as C
 import numpy as np
 import matplotlib.pyplot as plt
+import requests
+import h5py
 
 ###############################################################################
 # @FUNCTION : create_reader
@@ -97,3 +99,27 @@ def plot_image_pair(img1, text1, img2, text2):
     axes[1].imshow(img2, cmap="gray")
     axes[1].set_title(text2)
     axes[1].axis("off")
+
+
+###############################################################################
+# @FUNCTION : download
+###############################################################################
+def download(url, filename):
+    response = requests.get(url, stream=True)
+    with open(filename, 'wb') as handle:
+        for data in response.iter_content(chunk_size=2**20):
+            if data: handle.write(data)
+
+
+###############################################################################
+# @FUNCTION : load_vgg
+###############################################################################
+def load_vgg(path):
+    f = h5py.File(path)
+    layers = []
+    for k in range(f.attrs['nb_layers']):
+        g = f['layer_{}'.format(k)]
+        n = g.attrs['nb_params']
+        layers.append([g['param_{}'.format(p)][:] for p in range(n)])
+    f.close()
+    return layers

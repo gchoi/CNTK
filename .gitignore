@@ -344,3 +344,5 @@ packages/
 .vs/
 cscope.out
 Examples/Python/data/
+Examples/Python/results/
+Examples/Python/models/
