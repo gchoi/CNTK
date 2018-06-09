@@ -126,7 +126,7 @@ if is_test():
 else:
     outer = 10
     inner = 20
-    SIZE = 300
+    SIZE = 400
 
 SHIFT = np.reshape([103.939, 116.779, 123.68], (3, 1, 1)).astype('f')
 
