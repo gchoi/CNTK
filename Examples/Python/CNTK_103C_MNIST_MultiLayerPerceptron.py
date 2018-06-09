@@ -20,18 +20,7 @@ num_output_classes = 10
 
 # Ensure the training and test data is generated and available for this tutorial.
 # We search in two locations in the toolkit for the cached MNIST data set.
-data_found = False
-for data_dir in [os.path.join("..", "Examples", "Image", "DataSets", "MNIST"),
-                 os.path.join("data", "MNIST")]:
-    train_file = os.path.join(data_dir, "Train-28x28_cntk_text.txt")
-    test_file = os.path.join(data_dir, "Test-28x28_cntk_text.txt")
-    if os.path.isfile(train_file) and os.path.isfile(test_file):
-        data_found = True
-        break
-if not data_found:
-    raise ValueError("Please generate the data by completing CNTK 103 Part A")
-print("Data directory is {0}".format(data_dir))
-
+train_file, test_file = helper.ensure_data_dir()
 
 ###############################################################################
 # MODEL CREATION

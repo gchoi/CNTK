@@ -1,7 +1,8 @@
 from __future__ import print_function # Use a function definition from future version (say 3.x from 2.7 interpreter)
 import os
 import cntk as C
-
+import numpy as np
+import matplotlib.pyplot as plt
 
 ###############################################################################
 # @FUNCTION : create_reader
@@ -10,12 +11,12 @@ import cntk as C
 def create_reader(path, is_training, input_dim, num_label_classes):
     
     ctf = C.io.CTFDeserializer(path, C.io.StreamDefs(
-          labels=C.io.StreamDef(field='labels', shape=num_label_classes, is_sparse=False),
-          features=C.io.StreamDef(field='features', shape=input_dim, is_sparse=False)))
+            labels = C.io.StreamDef(field='labels', shape=num_label_classes, is_sparse=False),
+            features = C.io.StreamDef(field='features', shape=input_dim, is_sparse=False)))
                           
     return C.io.MinibatchSource(ctf,
-        randomize = is_training, max_sweeps = C.io.INFINITELY_REPEAT if is_training else 1)
-
+                                randomize = is_training,
+                                max_sweeps = C.io.INFINITELY_REPEAT if is_training else 1)
 
 ###############################################################################
 # @FUNCTION : moving_average
@@ -68,3 +69,31 @@ def ensure_data_dir():
     print("Data directory is {0}".format(data_dir))
     
     return train_file, test_file
+
+
+###############################################################################
+# @FUNCTION : print_image_stats
+###############################################################################
+# Print image statistics
+def print_image_stats(img, text):
+    print(text)
+    print("Max: {0:.2f}, Median: {1:.2f}, Mean: {2:.2f}, Min: {3:.2f}".format(np.max(img),
+                                                                              np.median(img),
+                                                                              np.mean(img),
+                                                                              np.min(img)))
+
+
+###############################################################################
+# @FUNCTION : plot_image_pair
+###############################################################################
+# Define a helper function to plot a pair of images
+def plot_image_pair(img1, text1, img2, text2):
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(6, 6))
+
+    axes[0].imshow(img1, cmap="gray")
+    axes[0].set_title(text1)
+    axes[0].axis("off")
+
+    axes[1].imshow(img2, cmap="gray")
+    axes[1].set_title(text2)
+    axes[1].axis("off")
