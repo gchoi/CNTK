@@ -14,6 +14,9 @@ import helper
 cntk.tests.test_utils.set_device_from_pytest_env() # (only needed for our build system)
 C.cntk_py.set_fixed_random_seed(1) # fix a random seed for CNTK components
 
+style_path = 'monalisa.jpg'
+content_path = 'test_content.jpg'
+
 # Check for an environment variable defined in CNTK's test infrastructure
 envvar = 'CNTK_EXTERNAL_TESTDATA_SOURCE_DIRECTORY'
 def is_test(): return envvar in os.environ
@@ -111,9 +114,6 @@ def total_variation_loss(x):
 ###############################################################################
 # INSTANTIATING THE LOSS
 ###############################################################################
-style_path = 'style.jpg'
-content_path = 'content.jpg'
-
 start_from_random = False
 content_weight = 5.0
 style_weight = 1.0
@@ -154,10 +154,10 @@ for local_path in content_path, style_path:
         helper.download('https://cntk.ai/jup/%s' % local_path, os.path.join("./images", local_path))
 
 # Load the images
-style   = load_image(os.path.join("./images", style_path))
-#content = load_image(os.path.join("./images", content_path))
-#style   = load_image(os.path.join("./images", "the-scream.jpg"))
-content = load_image(os.path.join("./images", "minjin.jpg"))
+#style   = load_image(os.path.join("./images", style_path))
+#content = load_image(os.path.joinmimages", content_path))
+style   = load_image("./16-style.jpg")
+content = load_image("./16-original.jpg")
 
 # Display the images
 for img in content, style:
