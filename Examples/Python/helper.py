@@ -20,6 +20,42 @@ def create_reader(path, is_training, input_dim, num_label_classes):
                                 randomize = is_training,
                                 max_sweeps = C.io.INFINITELY_REPEAT if is_training else 1)
 
+
+###############################################################################
+# @FUNCTION : create_reader
+###############################################################################
+import cntk.io.transforms as xforms
+def create_reader2(map_file,
+                   mean_file,
+                   train,
+                   image_width,
+                   image_height,
+                   num_channels,
+                   num_classes):
+    print("Reading map file:", map_file)
+    print("Reading mean file:", mean_file)
+    
+    if not os.path.exists(map_file) or not os.path.exists(mean_file):
+        raise RuntimeError("This tutorials depends 201A tutorials, please run 201A first.")
+
+    # transformation pipeline for the features has jitter/crop only when training
+    transforms = []
+    # train uses data augmentation (translation only)
+    if train:
+        transforms += [
+            xforms.crop(crop_type='randomside', side_ratio=0.8) 
+        ]
+    transforms += [
+        xforms.scale(width=image_width, height=image_height, channels=num_channels, interpolations='linear'),
+        xforms.mean(mean_file)
+    ]
+    # deserializer
+    return C.io.MinibatchSource(C.io.ImageDeserializer(map_file, C.io.StreamDefs(
+        features = C.io.StreamDef(field='image', transforms=transforms), # first column in map file is referred to as 'image'
+        labels   = C.io.StreamDef(field='label', shape=num_classes)      # and second as 'label'
+    )))
+
+
 ###############################################################################
 # @FUNCTION : moving_average
 ###############################################################################

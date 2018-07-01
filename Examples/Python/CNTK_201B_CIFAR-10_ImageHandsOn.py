@@ -6,6 +6,8 @@ import numpy as np
 import os
 import PIL
 import sys
+import helper
+
 try: 
     from urllib.request import urlopen 
 except ImportError: 
@@ -42,42 +44,24 @@ image_width  = 32
 num_channels = 3
 num_classes  = 10
 
-import cntk.io.transforms as xforms 
 #
 # Define the reader for both training and evaluation action.
 #
-def create_reader(map_file, mean_file, train):
-    print("Reading map file:", map_file)
-    print("Reading mean file:", mean_file)
-    
-    if not os.path.exists(map_file) or not os.path.exists(mean_file):
-        raise RuntimeError("This tutorials depends 201A tutorials, please run 201A first.")
-
-    # transformation pipeline for the features has jitter/crop only when training
-    transforms = []
-    # train uses data augmentation (translation only)
-    if train:
-        transforms += [
-            xforms.crop(crop_type='randomside', side_ratio=0.8) 
-        ]
-    transforms += [
-        xforms.scale(width=image_width, height=image_height, channels=num_channels, interpolations='linear'),
-        xforms.mean(mean_file)
-    ]
-    # deserializer
-    return C.io.MinibatchSource(C.io.ImageDeserializer(map_file, C.io.StreamDefs(
-        features = C.io.StreamDef(field='image', transforms=transforms), # first column in map file is referred to as 'image'
-        labels   = C.io.StreamDef(field='label', shape=num_classes)      # and second as 'label'
-    )))
-
-
 # Create the train and test readers
-reader_train = create_reader(os.path.join(data_path, 'train_map.txt'), 
-                             os.path.join(data_path, 'CIFAR-10_mean.xml'), True)
-reader_test  = create_reader(os.path.join(data_path, 'test_map.txt'), 
-                             os.path.join(data_path, 'CIFAR-10_mean.xml'), False)
-
-
+reader_train = helper.create_reader2(os.path.join(data_path, 'train_map.txt'),
+                                     os.path.join(data_path, 'CIFAR-10_mean.xml'),
+                                     True,
+                                     image_width,
+                                     image_height,
+                                     num_channels,
+                                     num_classes)
+reader_test  = helper.create_reader2(os.path.join(data_path, 'test_map.txt'),
+                                     os.path.join(data_path, 'CIFAR-10_mean.xml'),
+                                     False,
+                                     image_width,
+                                     image_height,
+                                     num_channels,
+                                     num_classes)
 
 ###############################################################################
 # MODEL CREATION
@@ -236,14 +220,195 @@ pred = train_and_evaluate(reader_train,
                           model_func=create_basic_model)
 
 
+def create_basic_model_terse(input, out_dims):
+
+    with C.layers.default_options(init=C.glorot_uniform(), activation=C.relu):
+        model = C.layers.Sequential([
+            C.layers.For(range(3), lambda i: [
+                C.layers.Convolution((5,5), [32,32,64][i], pad=True),
+                C.layers.MaxPooling((3,3), strides=(2,2))
+                ]),
+            C.layers.Dense(64),
+            C.layers.Dense(out_dims, activation=None)
+        ])
+
+    return model(input)
 
 
+pred_basic_model = train_and_evaluate(reader_train, 
+                                      reader_test, 
+                                      max_epochs=10, 
+                                      model_func=create_basic_model_terse)
 
 
+###############################################################################
+# EVALUATION
+###############################################################################
+# Download a sample image 
+# (this is 00014.png from test dataset)
+# Any image of size 32,32 can be evaluated
+
+url = "https://cntk.ai/jup/201/00014.png"
+myimg = np.array(PIL.Image.open(urlopen(url)), dtype=np.float32)
+
+def eval(pred_op, image_data):
+    label_lookup = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+    image_mean = 133.0
+    image_data -= image_mean
+    image_data = np.ascontiguousarray(np.transpose(image_data, (2, 0, 1)))
+    
+    result = np.squeeze(pred_op.eval({pred_op.arguments[0]:[image_data]}))
+    
+    # Return top 3 results:
+    top_count = 3
+    result_indices = (-np.array(result)).argsort()[:top_count]
+
+    print("Top 3 predictions:")
+    for i in range(top_count):
+        print("\tLabel: {:10s}, confidence: {:.2f}%".format(label_lookup[result_indices[i]], result[result_indices[i]] * 100))
 
 
+# Run the evaluation on the downloaded image
+eval(pred_basic_model, myimg)
 
 
+###############################################################################
+# MODEL : CNN WITH DROPOUT
+###############################################################################
+def create_basic_model_with_dropout(input, out_dims):
+
+    with C.layers.default_options(activation=C.relu, init=C.glorot_uniform()):
+        model = C.layers.Sequential([
+            C.layers.For(range(3), lambda i: [
+                C.layers.Convolution((5,5), [32,32,64][i], pad=True),
+                C.layers.MaxPooling((3,3), strides=(2,2))
+            ]),
+            C.layers.Dense(64),
+            C.layers.Dropout(0.25),
+            C.layers.Dense(out_dims, activation=None)
+        ])
+
+    return model(input)
 
 
+pred_basic_model_dropout = train_and_evaluate(reader_train,
+                                              reader_test,
+                                              max_epochs=5,
+                                              model_func=create_basic_model_with_dropout)
 
+
+###############################################################################
+# MODEL : CNN WITH BN
+###############################################################################
+def create_basic_model_with_batch_normalization(input, out_dims):
+
+    with C.layers.default_options(activation=C.relu, init=C.glorot_uniform()):
+        model = C.layers.Sequential([
+            C.layers.For(range(3), lambda i: [
+                C.layers.Convolution((5,5), [32,32,64][i], pad=True),
+                C.layers.BatchNormalization(map_rank=1),
+                C.layers.MaxPooling((3,3), strides=(2,2))
+            ]),
+            C.layers.Dense(64),
+            C.layers.BatchNormalization(map_rank=1),
+            C.layers.Dense(out_dims, activation=None)
+        ])
+
+    return model(input)
+
+
+pred_basic_model_bn = train_and_evaluate(reader_train, 
+                                         reader_test, 
+                                         max_epochs=5, 
+                                         model_func=create_basic_model_with_batch_normalization)
+
+
+###############################################################################
+# MODEL : VGG9
+###############################################################################
+def create_vgg9_model(input, out_dims):
+    with C.layers.default_options(activation=C.relu, init=C.glorot_uniform()):
+        model = C.layers.Sequential([
+            C.layers.For(range(3), lambda i: [
+                C.layers.Convolution((3,3), [64,96,128][i], pad=True),
+                C.layers.Convolution((3,3), [64,96,128][i], pad=True),
+                C.layers.MaxPooling((3,3), strides=(2,2))
+            ]),
+            C.layers.For(range(2), lambda : [
+                C.layers.Dense(1024)
+            ]),
+            C.layers.Dense(out_dims, activation=None)
+        ])
+        
+    return model(input)
+
+
+pred_vgg = train_and_evaluate(reader_train, 
+                              reader_test, 
+                              max_epochs=5, 
+                              model_func=create_vgg9_model)
+
+
+###############################################################################
+# MODEL :ResNet
+###############################################################################
+def convolution_bn(input, filter_size, num_filters, strides=(1,1), init=C.he_normal(), activation=C.relu):
+    if activation is None:
+        activation = lambda x: x
+        
+    r = C.layers.Convolution(filter_size, 
+                             num_filters, 
+                             strides=strides, 
+                             init=init, 
+                             activation=None, 
+                             pad=True, bias=False)(input)
+    r = C.layers.BatchNormalization(map_rank=1)(r)
+    r = activation(r)
+    
+    return r
+
+def resnet_basic(input, num_filters):
+    c1 = convolution_bn(input, (3,3), num_filters)
+    c2 = convolution_bn(c1, (3,3), num_filters, activation=None)
+    p  = c2 + input
+    return C.relu(p)
+
+def resnet_basic_inc(input, num_filters):
+    c1 = convolution_bn(input, (3,3), num_filters, strides=(2,2))
+    c2 = convolution_bn(c1, (3,3), num_filters, activation=None)
+
+    s = convolution_bn(input, (1,1), num_filters, strides=(2,2), activation=None)
+    
+    p = c2 + s
+    return C.relu(p)
+
+def resnet_basic_stack(input, num_filters, num_stack):
+    assert (num_stack > 0)
+    
+    r = input
+    for _ in range(num_stack):
+        r = resnet_basic(r, num_filters)
+    return r
+
+
+def create_resnet_model(input, out_dims):
+    conv = convolution_bn(input, (3,3), 16)
+    r1_1 = resnet_basic_stack(conv, 16, 3)
+
+    r2_1 = resnet_basic_inc(r1_1, 32)
+    r2_2 = resnet_basic_stack(r2_1, 32, 2)
+
+    r3_1 = resnet_basic_inc(r2_2, 64)
+    r3_2 = resnet_basic_stack(r3_1, 64, 2)
+.
+    # Global average pooling
+    pool = C.layers.AveragePooling(filter_shape=(8,8), strides=(1,1))(r3_2)    
+    net = C.layers.Dense(out_dims, init=C.he_normal(), activation=None)(pool)
+    
+    return net
+
+
+pred_resnet = train_and_evaluate(reader_train,
+                                 reader_test,
+                                 max_epochs=5,
+                                 model_func=create_resnet_model)
