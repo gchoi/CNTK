@@ -156,8 +156,8 @@ for local_path in content_path, style_path:
 # Load the images
 #style   = load_image(os.path.join("./images", style_path))
 #content = load_image(os.path.joinmimages", content_path))
-style   = load_image("./16-style.jpg")
-content = load_image("./16-original.jpg")
+style   = load_image("./style.jpg")
+content = load_image("./original.jpg")
 
 # Display the images
 for img in content, style:

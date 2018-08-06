@@ -11,8 +11,8 @@ namespace CNTK.CSTrainingExamples
         static void Main(string[] args)
         {
             var device = DeviceDescriptor.GPUDevice(0);
-            Console.WriteLine($"======== running LogisticRegression.TrainAndEvaluate using {device.Type} ========");
-            LogisticRegression.TrainAndEvaluate(device);
+            //Console.WriteLine($"======== running LogisticRegression.TrainAndEvaluate using {device.Type} ========");
+            //LogisticRegression.TrainAndEvaluate(device);
 
             //Console.WriteLine($"======== running MNISTClassifier.TrainAndEvaluate with multilayer perceptron (MLP) classifier using {device.Type} ========");
             //MNISTClassifier.TrainAndEvaluate(device, false, true);
@@ -20,8 +20,8 @@ namespace CNTK.CSTrainingExamples
             //Console.WriteLine($"======== running MNISTClassifier.TrainAndEvaluate with convolutional neural network using {device.Type} ========");
             //MNISTClassifier.TrainAndEvaluate(device, true, true);
 
-            //Console.WriteLine($"======== running CifarResNet.TrainAndEvaluate using {device.Type} ========");
-            //CifarResNetClassifier.TrainAndEvaluate(device, true);
+            Console.WriteLine($"======== running CifarResNet.TrainAndEvaluate using {device.Type} ========");
+            CifarResNetClassifier.TrainAndEvaluate(device, true);
 
             //Console.WriteLine($"======== running TransferLearning.TrainAndEvaluateWithFlowerData using {device.Type} ========");
             //TransferLearning.TrainAndEvaluateWithFlowerData(device, true);
